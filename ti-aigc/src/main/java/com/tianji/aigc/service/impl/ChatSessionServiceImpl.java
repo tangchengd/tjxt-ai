@@ -61,7 +61,7 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
     }
 
     private final ChatMemory chatMemory;
-    private final ChatMemoryRepository chatMemoryRepository;
+//    private final ChatMemoryRepository chatMemoryRepository;
 
     @Override
     public List<MessageVO> queryBySessionId(String sessionId) {
