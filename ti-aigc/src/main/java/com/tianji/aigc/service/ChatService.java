@@ -15,4 +15,11 @@ public interface ChatService {
     Flux<ChatEventVO> chat(String question, String sessionId);
 
     Flux<String> streamChat(String input);
+
+    /**
+     * 停止生成
+     *
+     * @param sessionId 会话id
+     */
+    void stop(String sessionId);
 }

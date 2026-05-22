@@ -32,4 +32,9 @@ public class ChatController {
         // 使用 stream().content() 返回 Flux 流式数据
         return this.chatService.streamChat(input);
     }
+
+    @PostMapping("/stop")
+    public void stop(@RequestParam("sessionId") String sessionId) {
+        this.chatService.stop(sessionId);
+    }
 }
