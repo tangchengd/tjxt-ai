@@ -1,7 +1,11 @@
 package com.tianji.aigc.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.IdUtil;
 import com.tianji.aigc.config.SystemPromptConfig;
+import com.tianji.aigc.config.ToolResultHolder;
+import com.tianji.aigc.constants.Constant;
 import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.service.ChatService;
 import com.tianji.aigc.vo.ChatEventVO;
@@ -21,12 +25,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.catalina.Lifecycle.STOP_EVENT;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
 
+    // 输出结束的标记
+    private static final ChatEventVO STOP_EVENT = ChatEventVO.builder().eventType(ChatEventTypeEnum.STOP.getValue()).build();
     private final ChatClient chatClient;
     private final SystemPromptConfig systemPromptConfig;
     private final ChatMemory chatMemory;
@@ -43,6 +51,8 @@ public class ChatServiceImpl implements ChatService {
         // 大模型输出内容的缓存器，用于在输出中断后的数据存储
         var outputBuilder = new StringBuilder();
         var hashOps = this.stringRedisTemplate.boundHashOps(GENERATE_STATUS_KEY);
+        // 生成请求id
+        var requestId = IdUtil.fastSimpleUUID();
 
         return this.chatClient.prompt()
                 .system(promptSystem -> promptSystem
@@ -50,6 +60,7 @@ public class ChatServiceImpl implements ChatService {
                         .param("now", DateUtil.now()) // 设置当前时间的参数
                 )
                 .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId)) //设置对话记忆中的对话id
+                .toolContext(Map.of(Constant.REQUEST_ID, requestId)) //通过工具上下文传递参数
                 .user(question)
                 .stream()
                 .chatResponse()
@@ -75,9 +86,22 @@ public class ChatServiceImpl implements ChatService {
                             .eventType(ChatEventTypeEnum.DATA.getValue())
                             .build();
                 })
-                .concatWith(Flux.just(ChatEventVO.builder()  // 标记输出结束
-                        .eventType(ChatEventTypeEnum.STOP.getValue())
-                        .build()));
+                .concatWith(Flux.defer(() -> {
+                    // 通过请求id获取到参数列表，如果不为空，就将其追加到返回结果中
+                    var map = ToolResultHolder.get(requestId);
+                    if (CollUtil.isNotEmpty(map)) {
+                        ToolResultHolder.remove(requestId);
+                        // 工具被调用了，需要向前端传递参数
+                        return Flux.just(ChatEventVO.builder()
+                                .eventType(ChatEventTypeEnum.PARAM.getValue())
+                                .eventData(map)
+                                .build(), STOP_EVENT);
+                    }
+                    return Flux.just(STOP_EVENT); // 结束标识
+                }));
+//                .concatWith(Flux.just(ChatEventVO.builder()  // 标记输出结束
+//                        .eventType(ChatEventTypeEnum.STOP.getValue())
+//                        .build()));
     }
 
     /**
