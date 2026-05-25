@@ -11,6 +11,7 @@ import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.service.ChatService;
 import com.tianji.aigc.vo.ChatEventVO;
 import com.tianji.common.domain.R;
+import com.tianji.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -54,6 +55,8 @@ public class ChatServiceImpl implements ChatService {
         var hashOps = this.stringRedisTemplate.boundHashOps(GENERATE_STATUS_KEY);
         // 生成请求id
         var requestId = IdUtil.fastSimpleUUID();
+        // 获取用户id
+        var userId = UserContext.getUser();
 
         return this.chatClient.prompt()
                 .system(promptSystem -> promptSystem
@@ -61,7 +64,7 @@ public class ChatServiceImpl implements ChatService {
                         .param("now", DateUtil.now()) // 设置当前时间的参数
                 )
                 .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId)) //设置对话记忆中的对话id
-                .toolContext(Map.of(Constant.REQUEST_ID, requestId)) //通过工具上下文传递参数
+                .toolContext(Map.of(Constant.REQUEST_ID, requestId, Constant.USER_ID, userId)) //通过工具上下文传递参数
                 .user(question)
                 .stream()
                 .chatResponse()
