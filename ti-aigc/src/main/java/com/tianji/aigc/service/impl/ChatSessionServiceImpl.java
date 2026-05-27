@@ -1,9 +1,12 @@
 package com.tianji.aigc.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.stream.StreamUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.aigc.config.SessionProperties;
 import com.tianji.aigc.entity.ChatSession;
@@ -21,6 +24,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -96,6 +100,38 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
                             .build();
                 })
                 .toList();
+    }
+
+    /**
+     * 异步更新聊天会话的标题
+     *
+     * @param sessionId 会话ID，用于标识特定的聊天会话
+     * @param title     新的会话标题，如果为空则不进行更新
+     * @param userId    用户ID
+     */
+    @Async
+    @Override
+    public void update(String sessionId, String title, Long userId) {
+        // 查询符合条件的聊天会话列表
+        List<ChatSession> list = super.lambdaQuery()
+                .eq(ChatSession::getSessionId, sessionId)
+                .eq(ChatSession::getUserId, userId)
+                .list();
+        // 如果列表为空，直接返回，无需进一步处理
+        if (CollUtil.isEmpty(list)) {
+            return;
+        }
+
+        // 获取列表中的第一个聊天会话实例
+        ChatSession chatSession = list.get(0);
+        // 如果聊天会话的标题为空，并且新标题不为空，则更新标题
+        if (StrUtil.isEmpty(chatSession.getTitle()) && !StrUtil.isEmpty(title)) {
+            chatSession.setTitle(StrUtil.sub(title, 0, 100));
+        }
+        // 设置更新字段为updateTime为当前时间
+        chatSession.setUpdateTime(LocalDateTimeUtil.now());
+        // 更新数据库中的聊天会话信息
+        super.updateById(chatSession);
     }
 
 }

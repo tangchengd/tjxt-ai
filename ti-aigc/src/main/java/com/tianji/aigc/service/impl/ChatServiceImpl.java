@@ -9,6 +9,7 @@ import com.tianji.aigc.config.ToolResultHolder;
 import com.tianji.aigc.constants.Constant;
 import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.service.ChatService;
+import com.tianji.aigc.service.ChatSessionService;
 import com.tianji.aigc.vo.ChatEventVO;
 import com.tianji.common.domain.R;
 import com.tianji.common.utils.UserContext;
@@ -45,6 +46,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatMemory chatMemory;
     private final StringRedisTemplate stringRedisTemplate;
     private final VectorStore vectorStore;
+    private final ChatSessionService chatSessionService;
     // 存储大模型的生成状态，这里采用ConcurrentHashMap是确保线程安全
     // 目前的版本暂时用Map实现，如果考虑分布式环境的话，可以考虑用redis来实现
 //    private static final Map<String, Boolean> GENERATE_STATUS = new ConcurrentHashMap<>();
@@ -61,6 +63,9 @@ public class ChatServiceImpl implements ChatService {
         var requestId = IdUtil.fastSimpleUUID();
         // 获取用户id
         var userId = UserContext.getUser();
+
+        // 异步更新会话信息
+        this.chatSessionService.update(sessionId, question, userId);
 
         // 创建RAG增强
         var qaAdvisor = QuestionAnswerAdvisor.builder(this.vectorStore)
