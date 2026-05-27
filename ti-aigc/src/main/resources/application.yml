@@ -38,6 +38,10 @@ tj:
           data-id: recommend-agent-system-message.txt
         buy-agent:
           data-id: buy-agent-system-message.txt
+        consult-agent:
+          data-id: consult-agent-system-message.txt
+        knowledge-agent:
+          data-id: knowledge-agent-system-message.txt
         text:
           data-id: text-system-chat-message.txt
     memory:
