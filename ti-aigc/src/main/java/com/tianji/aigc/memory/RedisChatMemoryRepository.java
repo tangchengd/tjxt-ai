@@ -7,6 +7,8 @@ import cn.hutool.core.stream.StreamUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import jakarta.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.data.redis.core.ListOperations;
@@ -18,10 +20,11 @@ import java.util.Set;
 /**
  * 基于Redis实现的ChatMemoryRepository
  */
-public class RedisChatMemoryRepository implements ChatMemoryRepository {
+public class RedisChatMemoryRepository implements ChatMemoryRepository, MyChatMemoryRepository {
 
     // 默认redis中key的前缀
     public static final String DEFAULT_PREFIX = "CHAT:";
+    private static final Logger log = LoggerFactory.getLogger(RedisChatMemoryRepository.class);
 
     private final String prefix;
 
@@ -88,5 +91,23 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
 
     private String getKey(String conversationId) {
         return prefix + conversationId;
+    }
+
+    /**
+     * 根据对话ID优化对话记录，删除最后的2条消息，因为这条消息是从路由智能体存储的，请求由后续的智能体处理
+     * 为了确保历史消息的完整性，所以需要将中间转发的消息清理掉
+     *
+     * @param conversationId 对话的唯一标识符
+     */
+    public void optimization(String conversationId) {
+        var redisKey = this.getKey(conversationId);
+//        var listOps = this.stringRedisTemplate.boundListOps(redisKey);
+//        // 从Redis列表右侧弹出2个元素
+//        listOps.rightPop(2);
+        // RPOP key
+        String poppedItem = stringRedisTemplate.opsForList().rightPop(redisKey);
+        log.info("poppedItem: {}", poppedItem);
+        String poppedItem1 = stringRedisTemplate.opsForList().rightPop(redisKey);
+        log.info("poppedItem1: {}", poppedItem1);
     }
 }
