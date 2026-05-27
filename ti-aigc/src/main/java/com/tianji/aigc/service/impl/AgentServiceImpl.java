@@ -15,7 +15,7 @@ import reactor.core.publisher.Flux;
 
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "tj.ai", name = "chat-type", havingValue = "ENHANCE")
+@ConditionalOnProperty(prefix = "tj.ai", name = "chat-type", havingValue = "ROUTE")
 public class AgentServiceImpl implements ChatService {
 
     private final ChatClient chatClient;
