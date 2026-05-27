@@ -2,10 +2,12 @@ package com.tianji.aigc.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tianji.aigc.entity.ChatSession;
+import com.tianji.aigc.vo.ChatSessionVO;
 import com.tianji.aigc.vo.MessageVO;
 import com.tianji.aigc.vo.SessionVO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ChatSessionService extends IService<ChatSession> {
 
@@ -40,5 +42,25 @@ public interface ChatSessionService extends IService<ChatSession> {
      * @param userId    用户ID
      */
     void update(String sessionId, String title, Long userId);
+
+    /**
+     * 查询历史会话列表
+     */
+    Map<String, List<ChatSessionVO>> queryHistorySession();
+
+    /**
+     * 删除历史会话
+     *
+     * @param sessionId 会话id
+     */
+    void deleteHistorySession(String sessionId);
+
+    /**
+     * 更新历史会话标题
+     *
+     * @param sessionId 会话id
+     * @param title     标题
+     */
+    void updateTitle(String sessionId, String title);
 
 }
