@@ -14,6 +14,8 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -29,16 +31,25 @@ public class SpringAIConfig {
      * 配置 ChatClient
      */
     @Bean
-    public ChatClient chatClient(ChatClient.Builder chatClientBuilder,
+    public ChatClient chatClient(@Qualifier("dashscopeChatModel") ChatModel dashScopeChatModel,
                                  Advisor loggerAdvisor, // 日志记录器
                                  Advisor messageChatMemoryAdvisor, //对话记忆
                                  Advisor recordOptimizationAdvisor, // 记录优化
                                  CourseTools courseTools, // 课程工具
                                  OrderTools orderTools // 预下单工具
     ) {
-        return chatClientBuilder
+        return ChatClient.builder(dashScopeChatModel)
                 .defaultAdvisors(loggerAdvisor, messageChatMemoryAdvisor, recordOptimizationAdvisor) //添加 Advisor 功能增强
 //                .defaultTools(courseTools, orderTools) //添加默认工具
+                .build();
+    }
+
+    @Bean
+    public ChatClient openAiChatClient(@Qualifier("openAiChatModel") ChatModel openAiChatModel,
+                                       Advisor loggerAdvisor  // 日志记录器
+    ) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(loggerAdvisor)
                 .build();
     }
 

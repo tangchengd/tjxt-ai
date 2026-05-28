@@ -38,6 +38,7 @@ public class ChatServiceImpl implements ChatService {
     // 输出结束的标记
     private static final ChatEventVO STOP_EVENT = ChatEventVO.builder().eventType(ChatEventTypeEnum.STOP.getValue()).build();
     private final ChatClient chatClient;
+    private final ChatClient openAiChatClient;
     private final SystemPromptConfig systemPromptConfig;
     private final ChatMemory chatMemory;
     private final StringRedisTemplate stringRedisTemplate;
@@ -182,5 +183,15 @@ public class ChatServiceImpl implements ChatService {
         // 移除标记
 //        GENERATE_STATUS.remove(sessionId);
         hashOps.delete(sessionId);
+    }
+
+    @Override
+    public String chatText(String question) {
+//        return this.chatClient.prompt()
+//                .system(promptSystem -> promptSystem.text(this.systemPromptConfig.getTextSystemMessage().get()))
+//                .user(question)
+//                .call()
+//                .content();
+        return "测试回复";
     }
 }
