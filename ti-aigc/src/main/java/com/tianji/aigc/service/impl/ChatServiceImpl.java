@@ -187,11 +187,10 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public String chatText(String question) {
-//        return this.chatClient.prompt()
-//                .system(promptSystem -> promptSystem.text(this.systemPromptConfig.getTextSystemMessage().get()))
-//                .user(question)
-//                .call()
-//                .content();
-        return "测试回复";
+        return this.chatClient.prompt()
+                .system(promptSystem -> promptSystem.text(this.systemPromptConfig.getTextSystemMessage().get()))
+                .user(question)
+                .call()
+                .content();
     }
 }

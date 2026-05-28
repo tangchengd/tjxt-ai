@@ -3,11 +3,10 @@ package com.tianji.aigc.controller;
 import com.tianji.aigc.service.ChatService;
 import com.tianji.aigc.vo.ChatDTO;
 import com.tianji.aigc.vo.ChatEventVO;
+import com.tianji.aigc.vo.TemplateVO;
 import com.tianji.common.annotations.NoWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.N;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -19,6 +18,10 @@ import reactor.core.publisher.Flux;
 public class ChatController {
 
     private final ChatService chatService;
+
+    // 优化： 将文本的模版写入到nacos中
+    private static final TemplateVO TEMPLATE_VO = new TemplateVO();
+
 
     @NoWrapper // 标记结果不进行包装
     @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -41,5 +44,10 @@ public class ChatController {
     @PostMapping("/text")
     public String chatText(@RequestBody String question) {
         return this.chatService.chatText(question);
+    }
+
+    @GetMapping("/templates")
+    public TemplateVO getTemplates() {
+        return TEMPLATE_VO;
     }
 }
